@@ -99,7 +99,7 @@ const RecentTransactions = () => {
             </div>
             <div className="text-right">
               <p className="font-semibold text-red-600">
-                -${transaction.amount.toLocaleString()}
+                -R{transaction.amount.toLocaleString()}
               </p>
             </div>
           </div>

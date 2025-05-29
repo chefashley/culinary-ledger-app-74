@@ -41,7 +41,7 @@ const BudgetCard = ({ category }: BudgetCardProps) => {
         </div>
         <div className="text-right">
           <p className="text-sm text-gray-600">Budget</p>
-          <p className="text-lg font-semibold text-gray-900">${category.budget.toLocaleString()}</p>
+          <p className="text-lg font-semibold text-gray-900">R{category.budget.toLocaleString()}</p>
         </div>
       </div>
       
@@ -49,7 +49,7 @@ const BudgetCard = ({ category }: BudgetCardProps) => {
       
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Spent: ${category.spent.toLocaleString()}</span>
+          <span className="text-gray-600">Spent: R{category.spent.toLocaleString()}</span>
           <span className="text-gray-600">{percentage.toFixed(1)}%</span>
         </div>
         
@@ -62,7 +62,7 @@ const BudgetCard = ({ category }: BudgetCardProps) => {
         
         <div className="flex justify-between text-sm">
           <span className={`font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            Remaining: ${remaining.toLocaleString()}
+            Remaining: R{remaining.toLocaleString()}
           </span>
           {percentage > 90 && (
             <span className="text-red-500 font-medium">⚠️ Almost over budget!</span>
