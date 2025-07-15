@@ -11,7 +11,7 @@ const QuickExpenseFirebase = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { addExpense } = useExpenses();
-  const { isStaff } = useAuth();
+  const { canAddExpenses } = useAuth();
 
   const categories = [
     { value: 'ingredients' as const, label: 'Ingredients' },
@@ -48,12 +48,12 @@ const QuickExpenseFirebase = () => {
     }
   };
 
-  if (isStaff()) {
+  if (!canAddExpenses()) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 border border-orange-100">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Expense</h2>
         <div className="text-center py-8">
-          <p className="text-gray-600">Staff members have read-only access</p>
+          <p className="text-gray-600">You don't have permission to add expenses</p>
         </div>
       </div>
     );

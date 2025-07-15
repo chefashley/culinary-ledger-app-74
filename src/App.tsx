@@ -8,8 +8,30 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Login } from "@/pages/Login";
 import { Register } from "@/pages/Register";
 import { ForgotPassword } from "@/pages/ForgotPassword";
-import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import ChefDashboard from "./pages/ChefDashboard";
 import NotFound from "./pages/NotFound";
+import { useAuth } from "@/contexts/AuthContext";
+
+const DashboardRedirect = () => {
+  const { userProfile } = useAuth();
+  
+  if (!userProfile) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  switch (userProfile.role) {
+    case 'Admin':
+      return <Navigate to="/admin-dashboard" replace />;
+    case 'Manager':
+      return <Navigate to="/manager-dashboard" replace />;
+    case 'Chef':
+      return <Navigate to="/chef-dashboard" replace />;
+    default:
+      return <Navigate to="/login" replace />;
+  }
+};
 
 const queryClient = new QueryClient();
 
@@ -25,14 +47,38 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route 
-              path="/dashboard" 
+              path="/admin-dashboard" 
               element={
-                <ProtectedRoute>
-                  <Dashboard />
+                <ProtectedRoute requiredRole="Admin">
+                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route 
+              path="/manager-dashboard" 
+              element={
+                <ProtectedRoute requiredRole="Manager">
+                  <ManagerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/chef-dashboard" 
+              element={
+                <ProtectedRoute requiredRole="Chef">
+                  <ChefDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardRedirect />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/" element={<DashboardRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

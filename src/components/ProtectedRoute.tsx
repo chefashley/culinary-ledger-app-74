@@ -1,19 +1,22 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
+  allowedRoles?: UserRole[];
   redirectTo?: string;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   requiredRole,
+  allowedRoles,
   redirectTo = '/login' 
 }) => {
   const { currentUser, userProfile, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -27,9 +30,27 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectTo} replace />;
   }
 
-  if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+  // Check role-based access
+  if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'Admin') {
+    return <Navigate to={getRoleDashboard(userProfile.role)} replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(userProfile.role)) {
+    return <Navigate to={getRoleDashboard(userProfile.role)} replace />;
   }
 
   return <>{children}</>;
+};
+
+const getRoleDashboard = (role: UserRole): string => {
+  switch (role) {
+    case 'Admin':
+      return '/admin-dashboard';
+    case 'Manager':
+      return '/manager-dashboard';
+    case 'Chef':
+      return '/chef-dashboard';
+    default:
+      return '/login';
+  }
 };

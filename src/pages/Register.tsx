@@ -100,9 +100,9 @@ export const Register: React.FC = () => {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="chef">Chef</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="Chef">Chef</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -11,7 +11,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-export type UserRole = 'admin' | 'chef' | 'staff';
+export type UserRole = 'Admin' | 'Manager' | 'Chef';
 
 export interface UserProfile {
   uid: string;
@@ -31,8 +31,12 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
+  isManager: () => boolean;
   isChef: () => boolean;
-  isStaff: () => boolean;
+  canEditBudgets: () => boolean;
+  canEditUsers: () => boolean;
+  canAddExpenses: () => boolean;
+  canViewAnalytics: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,15 +139,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isAdmin = (): boolean => {
-    return userProfile?.role === 'admin';
+    return userProfile?.role === 'Admin';
+  };
+
+  const isManager = (): boolean => {
+    return userProfile?.role === 'Manager';
   };
 
   const isChef = (): boolean => {
-    return userProfile?.role === 'chef' || userProfile?.role === 'admin';
+    return userProfile?.role === 'Chef';
   };
 
-  const isStaff = (): boolean => {
-    return userProfile?.role === 'staff';
+  const canEditBudgets = (): boolean => {
+    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager';
+  };
+
+  const canEditUsers = (): boolean => {
+    return userProfile?.role === 'Admin';
+  };
+
+  const canAddExpenses = (): boolean => {
+    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager' || userProfile?.role === 'Chef';
+  };
+
+  const canViewAnalytics = (): boolean => {
+    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager';
   };
 
   useEffect(() => {
@@ -170,8 +190,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword,
     hasRole,
     isAdmin,
+    isManager,
     isChef,
-    isStaff
+    canEditBudgets,
+    canEditUsers,
+    canAddExpenses,
+    canViewAnalytics
   };
 
   return (

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const RecentTransactionsFirebase = () => {
   const { expenses, loading, deleteExpense } = useExpenses();
-  const { isAdmin, userProfile } = useAuth();
+  const { canEditUsers, userProfile } = useAuth();
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -91,7 +91,7 @@ const RecentTransactionsFirebase = () => {
                     -R{expense.amount.toLocaleString()}
                   </p>
                 </div>
-                {(isAdmin() || expense.createdBy === userProfile?.uid) && (
+                {(canEditUsers() || expense.createdBy === userProfile?.uid) && (
                   <Button
                     variant="ghost"
                     size="sm"
