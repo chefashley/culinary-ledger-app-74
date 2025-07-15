@@ -1,24 +1,26 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useExpenses, useBudget } from '@/hooks/useFirestore';
-import { ChefHat, TrendingUp, DollarSign, AlertCircle, Users, Settings, LogOut, Edit, Save, X } from 'lucide-react';
+import { useExpenses, useBudget, useUsers } from '@/hooks/useFirestore';
+import { ChefHat, TrendingUp, DollarSign, AlertCircle, Users, Settings, LogOut, Edit, Save, X, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BudgetCardFirebase from '../components/BudgetCardFirebase';
 import ExpenseChartFirebase from '../components/ExpenseChartFirebase';
-import QuickExpenseFirebase from '../components/QuickExpenseFirebase';
 import RecentTransactionsFirebase from '../components/RecentTransactionsFirebase';
 
-const AdminDashboard = () => {
+const HODDashboard = () => {
   const { userProfile, logout } = useAuth();
   const { expenses } = useExpenses();
   const { budget, updateBudget } = useBudget();
+  const { users } = useUsers();
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetForm, setBudgetForm] = useState({
     total: 0,
+    ingredients: 0,
     equipment: 0,
-    support: 0
+    utilities: 0,
+    supplies: 0
   });
 
   const { totalBudget, totalSpent, remainingBudget } = useMemo(() => {
@@ -31,36 +33,38 @@ const AdminDashboard = () => {
 
   const budgetCategories = [
     {
-      category: 'equipment' as const,
-      name: 'Equipment',
-      color: 'bg-amber-500',
-      icon: 'chef-hat'
-    },
-    {
-      category: 'support' as const,
-      name: 'Support',
-      color: 'bg-blue-500',
-      icon: 'wrench'
-    },
-    {
       category: 'ingredients' as const,
       name: 'Ingredients',
       color: 'bg-orange-500',
       icon: 'utensils'
     },
     {
+      category: 'equipment' as const,
+      name: 'Equipment',
+      color: 'bg-amber-500',
+      icon: 'chef-hat'
+    },
+    {
       category: 'utilities' as const,
       name: 'Utilities',
       color: 'bg-yellow-500',
       icon: 'dollar-sign'
+    },
+    {
+      category: 'supplies' as const,
+      name: 'Supplies',
+      color: 'bg-red-500',
+      icon: 'shopping-bag'
     }
   ];
 
   const handleEditBudget = () => {
     setBudgetForm({
       total: budget?.total || 0,
+      ingredients: budget?.ingredients || 0,
       equipment: budget?.equipment || 0,
-      support: budget?.support || 0
+      utilities: budget?.utilities || 0,
+      supplies: budget?.supplies || 0
     });
     setEditingBudget(true);
   };
@@ -82,20 +86,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const roleStats = useMemo(() => {
+    const stats = users.reduce((acc, user) => {
+      acc[user.role] = (acc[user.role] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return stats;
+  }, [users]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-orange-100">
+      <header className="bg-white shadow-sm border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-orange-500 p-2 rounded-lg">
+              <div className="bg-purple-500 p-2 rounded-lg">
                 <ChefHat className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                <h1 className="text-2xl font-bold text-gray-900">HOD Dashboard</h1>
                 <p className="text-sm text-gray-600">
-                  Welcome back, {userProfile?.name} (Administrator)
+                  Welcome back, {userProfile?.name} (Head of Department)
                 </p>
               </div>
             </div>
@@ -108,7 +120,7 @@ const AdminDashboard = () => {
                     onClick={editingBudget ? handleSaveBudget : handleEditBudget}
                     variant="outline"
                     size="sm"
-                    className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                    className="text-purple-600 border-purple-600 hover:bg-purple-50"
                   >
                     {editingBudget ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
                   </Button>
@@ -141,12 +153,12 @@ const AdminDashboard = () => {
       {/* Budget Edit Form */}
       {editingBudget && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Card className="border-orange-200">
+          <Card className="border-purple-200">
             <CardHeader>
               <CardTitle>Edit Budget Allocations</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Total Budget (R)
@@ -160,7 +172,18 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Equipment Budget (R)
+                    Ingredients (R)
+                  </label>
+                  <Input
+                    type="number"
+                    value={budgetForm.ingredients}
+                    onChange={(e) => setBudgetForm(prev => ({ ...prev, ingredients: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Equipment (R)
                   </label>
                   <Input
                     type="number"
@@ -171,12 +194,23 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Support Budget (R)
+                    Utilities (R)
                   </label>
                   <Input
                     type="number"
-                    value={budgetForm.support}
-                    onChange={(e) => setBudgetForm(prev => ({ ...prev, support: parseFloat(e.target.value) || 0 }))}
+                    value={budgetForm.utilities}
+                    onChange={(e) => setBudgetForm(prev => ({ ...prev, utilities: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Supplies (R)
+                  </label>
+                  <Input
+                    type="number"
+                    value={budgetForm.supplies}
+                    onChange={(e) => setBudgetForm(prev => ({ ...prev, supplies: parseFloat(e.target.value) || 0 }))}
                     placeholder="0"
                   />
                 </div>
@@ -189,8 +223,8 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-orange-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Spent</p>
@@ -202,7 +236,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-orange-100">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Remaining</p>
@@ -214,16 +248,28 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-orange-100">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Budget Usage</p>
-                <p className="text-2xl font-bold text-orange-600">
+                <p className="text-2xl font-bold text-purple-600">
                   {totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}%
                 </p>
               </div>
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <AlertCircle className="h-6 w-6 text-orange-600" />
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-blue-600">{users.length}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -242,51 +288,86 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Charts and Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Charts and User Management */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2">
             <ExpenseChartFirebase />
           </div>
           <div>
-            <QuickExpenseFirebase />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2 text-purple-500" />
+                  User Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <div className="font-medium text-purple-800">HODs</div>
+                      <div className="text-2xl font-bold text-purple-600">{roleStats.HOD || 0}</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <div className="font-medium text-green-800">Chefs</div>
+                      <div className="text-2xl font-bold text-green-600">{roleStats.Chef || 0}</div>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="font-medium text-blue-800">Managers</div>
+                      <div className="text-2xl font-bold text-blue-600">{roleStats.Manager || 0}</div>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg">
+                      <div className="font-medium text-orange-800">Storekeepers</div>
+                      <div className="text-2xl font-bold text-orange-600">{roleStats.Storekeeper || 0}</div>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-purple-500 hover:bg-purple-600">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Manage Users
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
         {/* Recent Transactions */}
-        <div className="mt-8">
+        <div className="mb-8">
           <RecentTransactionsFirebase />
         </div>
 
-        {/* Admin Tools */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Settings className="h-5 w-5 mr-2 text-orange-500" />
-                Admin Tools
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-                  <Users className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Manage Users</span>
-                </Button>
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-                  <Settings className="h-5 w-5 mb-1" />
-                  <span className="text-xs">System Settings</span>
-                </Button>
-                <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
-                  <TrendingUp className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Advanced Analytics</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* HOD Tools */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="h-5 w-5 mr-2 text-purple-500" />
+              HOD Management Tools
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Users className="h-5 w-5 mb-1" />
+                <span className="text-xs">Role Management</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <DollarSign className="h-5 w-5 mb-1" />
+                <span className="text-xs">Budget Analytics</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <TrendingUp className="h-5 w-5 mb-1" />
+                <span className="text-xs">Financial Reports</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Settings className="h-5 w-5 mb-1" />
+                <span className="text-xs">System Settings</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default HODDashboard;

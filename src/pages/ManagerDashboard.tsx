@@ -1,25 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useExpenses, useBudget } from '@/hooks/useFirestore';
-import { ChefHat, TrendingUp, DollarSign, AlertCircle, LogOut, Edit, Save, X } from 'lucide-react';
+import { useExpenses, useBudget, usePendingExpenses } from '@/hooks/useFirestore';
+import { ChefHat, TrendingUp, DollarSign, AlertCircle, LogOut, Check, X, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BudgetCardFirebase from '../components/BudgetCardFirebase';
 import ExpenseChartFirebase from '../components/ExpenseChartFirebase';
-import QuickExpenseFirebase from '../components/QuickExpenseFirebase';
-import RecentTransactionsFirebase from '../components/RecentTransactionsFirebase';
 
 const ManagerDashboard = () => {
   const { userProfile, logout } = useAuth();
   const { expenses } = useExpenses();
-  const { budget, updateBudget } = useBudget();
-  const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetForm, setBudgetForm] = useState({
-    total: 0,
-    equipment: 0,
-    support: 0
-  });
+  const { budget } = useBudget();
+  const { pendingExpenses, approveExpense, rejectExpense } = usePendingExpenses();
 
   const { totalBudget, totalSpent, remainingBudget } = useMemo(() => {
     const totalBudget = budget?.total || 0;
@@ -31,54 +23,62 @@ const ManagerDashboard = () => {
 
   const budgetCategories = [
     {
-      category: 'equipment' as const,
-      name: 'Equipment',
-      color: 'bg-amber-500',
-      icon: 'chef-hat'
-    },
-    {
-      category: 'support' as const,
-      name: 'Support',
-      color: 'bg-blue-500',
-      icon: 'wrench'
-    },
-    {
       category: 'ingredients' as const,
       name: 'Ingredients',
       color: 'bg-orange-500',
       icon: 'utensils'
     },
     {
+      category: 'equipment' as const,
+      name: 'Equipment',
+      color: 'bg-amber-500',
+      icon: 'chef-hat'
+    },
+    {
       category: 'utilities' as const,
       name: 'Utilities',
       color: 'bg-yellow-500',
       icon: 'dollar-sign'
+    },
+    {
+      category: 'supplies' as const,
+      name: 'Supplies',
+      color: 'bg-red-500',
+      icon: 'shopping-bag'
     }
   ];
-
-  const handleEditBudget = () => {
-    setBudgetForm({
-      total: budget?.total || 0,
-      equipment: budget?.equipment || 0,
-      support: budget?.support || 0
-    });
-    setEditingBudget(true);
-  };
-
-  const handleSaveBudget = async () => {
-    try {
-      await updateBudget(budgetForm);
-      setEditingBudget(false);
-    } catch (error) {
-      console.error('Failed to update budget:', error);
-    }
-  };
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
       console.error('Logout error:', error);
+    }
+  };
+
+  const handleApprove = async (expenseId: string) => {
+    try {
+      await approveExpense(expenseId);
+    } catch (error) {
+      console.error('Error approving expense:', error);
+    }
+  };
+
+  const handleReject = async (expenseId: string) => {
+    try {
+      await rejectExpense(expenseId);
+    } catch (error) {
+      console.error('Error rejecting expense:', error);
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'ingredients': return 'bg-orange-100 text-orange-800';
+      case 'equipment': return 'bg-amber-100 text-amber-800';
+      case 'utilities': return 'bg-yellow-100 text-yellow-800';
+      case 'supplies': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -95,34 +95,14 @@ const ManagerDashboard = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Manager Dashboard</h1>
                 <p className="text-sm text-gray-600">
-                  Welcome back, {userProfile?.name} (Manager)
+                  Welcome back, {userProfile?.name} (Restaurant Manager)
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm text-gray-600">Total Budget</p>
-                <div className="flex items-center space-x-2">
-                  <p className="text-2xl font-bold text-gray-900">R{totalBudget.toLocaleString()}</p>
-                  <Button
-                    onClick={editingBudget ? handleSaveBudget : handleEditBudget}
-                    variant="outline"
-                    size="sm"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    {editingBudget ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-                  </Button>
-                  {editingBudget && (
-                    <Button
-                      onClick={() => setEditingBudget(false)}
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                <p className="text-2xl font-bold text-gray-900">R{totalBudget.toLocaleString()}</p>
               </div>
               <Button
                 onClick={handleLogout}
@@ -138,58 +118,10 @@ const ManagerDashboard = () => {
         </div>
       </header>
 
-      {/* Budget Edit Form */}
-      {editingBudget && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Card className="border-blue-200">
-            <CardHeader>
-              <CardTitle>Edit Budget Allocations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Total Budget (R)
-                  </label>
-                  <Input
-                    type="number"
-                    value={budgetForm.total}
-                    onChange={(e) => setBudgetForm(prev => ({ ...prev, total: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Equipment Budget (R)
-                  </label>
-                  <Input
-                    type="number"
-                    value={budgetForm.equipment}
-                    onChange={(e) => setBudgetForm(prev => ({ ...prev, equipment: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Support Budget (R)
-                  </label>
-                  <Input
-                    type="number"
-                    value={budgetForm.support}
-                    onChange={(e) => setBudgetForm(prev => ({ ...prev, support: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
             <div className="flex items-center justify-between">
               <div>
@@ -227,9 +159,21 @@ const ManagerDashboard = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                <p className="text-2xl font-bold text-orange-600">{pendingExpenses.length}</p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-lg">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Budget Categories */}
+        {/* Budget Categories - Read Only */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {budgetCategories.map((category) => (
             <BudgetCardFirebase 
@@ -242,20 +186,99 @@ const ManagerDashboard = () => {
           ))}
         </div>
 
-        {/* Charts and Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Expense Approvals and Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2">
             <ExpenseChartFirebase />
           </div>
           <div>
-            <QuickExpenseFirebase />
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-orange-500" />
+                  Pending Approvals
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {pendingExpenses.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No pending approvals
+                    </div>
+                  ) : (
+                    pendingExpenses.map((expense) => (
+                      <div key={expense.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{expense.description}</h4>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getCategoryColor(expense.category)}`}>
+                              {expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-red-600">R{expense.amount.toLocaleString()}</div>
+                            <div className="text-xs text-gray-500">
+                              {expense.createdAt?.toDate().toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2 mt-3">
+                          <Button
+                            size="sm"
+                            onClick={() => handleApprove(expense.id!)}
+                            className="bg-green-500 hover:bg-green-600 flex-1"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReject(expense.id!)}
+                            className="text-red-500 border-red-500 hover:bg-red-50 flex-1"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Recent Transactions */}
-        <div className="mt-8">
-          <RecentTransactionsFirebase />
-        </div>
+        {/* Manager Tools */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-blue-500" />
+              Manager Analytics & Tools
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <TrendingUp className="h-5 w-5 mb-1" />
+                <span className="text-xs">Expense Reports</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <DollarSign className="h-5 w-5 mb-1" />
+                <span className="text-xs">Budget Analysis</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <Clock className="h-5 w-5 mb-1" />
+                <span className="text-xs">Approval History</span>
+              </Button>
+              <Button variant="outline" className="h-16 flex flex-col items-center justify-center">
+                <AlertCircle className="h-5 w-5 mb-1" />
+                <span className="text-xs">Budget Alerts</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

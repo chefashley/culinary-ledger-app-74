@@ -11,7 +11,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-export type UserRole = 'Admin' | 'Manager' | 'Chef';
+export type UserRole = 'HOD' | 'Chef' | 'Manager' | 'Storekeeper';
 
 export interface UserProfile {
   uid: string;
@@ -19,6 +19,7 @@ export interface UserProfile {
   name: string;
   role: UserRole;
   lastLogin?: Date;
+  createdAt?: Date;
 }
 
 interface AuthContextType {
@@ -30,12 +31,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   hasRole: (role: UserRole) => boolean;
-  isAdmin: () => boolean;
-  isManager: () => boolean;
+  isHOD: () => boolean;
   isChef: () => boolean;
-  canEditBudgets: () => boolean;
-  canEditUsers: () => boolean;
-  canAddExpenses: () => boolean;
+  isManager: () => boolean;
+  isStorekeeper: () => boolean;
+  canManageBudgets: () => boolean;
+  canManageUsers: () => boolean;
+  canEditMenus: () => boolean;
+  canApproveExpenses: () => boolean;
+  canLogSupplies: () => boolean;
   canViewAnalytics: () => boolean;
 }
 
@@ -75,7 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         name,
         role,
-        lastLogin: new Date()
+        lastLogin: new Date(),
+        createdAt: new Date()
       };
       
       await setDoc(doc(db, 'users', result.user.uid), userProfile);
@@ -125,7 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: user.email || '',
           name: data.name,
           role: data.role,
-          lastLogin: data.lastLogin?.toDate()
+          lastLogin: data.lastLogin?.toDate(),
+          createdAt: data.createdAt?.toDate()
         });
       }
     } catch (error) {
@@ -134,36 +140,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Role checking functions
   const hasRole = (role: UserRole): boolean => {
     return userProfile?.role === role;
   };
 
-  const isAdmin = (): boolean => {
-    return userProfile?.role === 'Admin';
-  };
-
-  const isManager = (): boolean => {
-    return userProfile?.role === 'Manager';
+  const isHOD = (): boolean => {
+    return userProfile?.role === 'HOD';
   };
 
   const isChef = (): boolean => {
     return userProfile?.role === 'Chef';
   };
 
-  const canEditBudgets = (): boolean => {
-    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager';
+  const isManager = (): boolean => {
+    return userProfile?.role === 'Manager';
   };
 
-  const canEditUsers = (): boolean => {
-    return userProfile?.role === 'Admin';
+  const isStorekeeper = (): boolean => {
+    return userProfile?.role === 'Storekeeper';
   };
 
-  const canAddExpenses = (): boolean => {
-    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager' || userProfile?.role === 'Chef';
+  // Permission checking functions
+  const canManageBudgets = (): boolean => {
+    return userProfile?.role === 'HOD';
+  };
+
+  const canManageUsers = (): boolean => {
+    return userProfile?.role === 'HOD';
+  };
+
+  const canEditMenus = (): boolean => {
+    return userProfile?.role === 'Chef';
+  };
+
+  const canApproveExpenses = (): boolean => {
+    return userProfile?.role === 'Manager';
+  };
+
+  const canLogSupplies = (): boolean => {
+    return userProfile?.role === 'Storekeeper';
   };
 
   const canViewAnalytics = (): boolean => {
-    return userProfile?.role === 'Admin' || userProfile?.role === 'Manager';
+    return userProfile?.role === 'HOD' || userProfile?.role === 'Manager';
   };
 
   useEffect(() => {
@@ -189,12 +209,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     resetPassword,
     hasRole,
-    isAdmin,
-    isManager,
+    isHOD,
     isChef,
-    canEditBudgets,
-    canEditUsers,
-    canAddExpenses,
+    isManager,
+    isStorekeeper,
+    canManageBudgets,
+    canManageUsers,
+    canEditMenus,
+    canApproveExpenses,
+    canLogSupplies,
     canViewAnalytics
   };
 

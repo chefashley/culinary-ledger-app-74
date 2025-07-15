@@ -31,7 +31,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check role-based access
-  if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'Admin') {
+  if (requiredRole && userProfile.role !== requiredRole) {
     return <Navigate to={getRoleDashboard(userProfile.role)} replace />;
   }
 
@@ -44,12 +44,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
 const getRoleDashboard = (role: UserRole): string => {
   switch (role) {
-    case 'Admin':
-      return '/admin-dashboard';
-    case 'Manager':
-      return '/manager-dashboard';
+    case 'HOD':
+      return '/dashboard/hod';
     case 'Chef':
-      return '/chef-dashboard';
+      return '/dashboard/chef';
+    case 'Manager':
+      return '/dashboard/manager';
+    case 'Storekeeper':
+      return '/dashboard/store';
     default:
       return '/login';
   }

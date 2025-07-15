@@ -8,9 +8,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Login } from "@/pages/Login";
 import { Register } from "@/pages/Register";
 import { ForgotPassword } from "@/pages/ForgotPassword";
-import AdminDashboard from "./pages/AdminDashboard";
-import ManagerDashboard from "./pages/ManagerDashboard";
+import HODDashboard from "./pages/HODDashboard";
 import ChefDashboard from "./pages/ChefDashboard";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import StorekeeperDashboard from "./pages/StorekeeperDashboard";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,12 +23,14 @@ const DashboardRedirect = () => {
   }
   
   switch (userProfile.role) {
-    case 'Admin':
-      return <Navigate to="/admin-dashboard" replace />;
-    case 'Manager':
-      return <Navigate to="/manager-dashboard" replace />;
+    case 'HOD':
+      return <Navigate to="/dashboard/hod" replace />;
     case 'Chef':
-      return <Navigate to="/chef-dashboard" replace />;
+      return <Navigate to="/dashboard/chef" replace />;
+    case 'Manager':
+      return <Navigate to="/dashboard/manager" replace />;
+    case 'Storekeeper':
+      return <Navigate to="/dashboard/store" replace />;
     default:
       return <Navigate to="/login" replace />;
   }
@@ -46,16 +49,26 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Role-specific dashboards */}
             <Route 
-              path="/admin-dashboard" 
+              path="/dashboard/hod" 
               element={
-                <ProtectedRoute requiredRole="Admin">
-                  <AdminDashboard />
+                <ProtectedRoute requiredRole="HOD">
+                  <HODDashboard />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="/manager-dashboard" 
+              path="/dashboard/chef" 
+              element={
+                <ProtectedRoute requiredRole="Chef">
+                  <ChefDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/manager" 
               element={
                 <ProtectedRoute requiredRole="Manager">
                   <ManagerDashboard />
@@ -63,13 +76,15 @@ const App = () => (
               } 
             />
             <Route 
-              path="/chef-dashboard" 
+              path="/dashboard/store" 
               element={
-                <ProtectedRoute requiredRole="Chef">
-                  <ChefDashboard />
+                <ProtectedRoute requiredRole="Storekeeper">
+                  <StorekeeperDashboard />
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Redirect routes */}
             <Route 
               path="/dashboard" 
               element={

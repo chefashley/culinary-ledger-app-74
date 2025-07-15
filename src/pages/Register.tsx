@@ -53,6 +53,13 @@ export const Register: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const roleDescriptions = {
+    HOD: 'Head of Department - Full system access, budget management, user management',
+    Chef: 'Chef - Menu management, costing, profit margin calculations',
+    Manager: 'Restaurant Manager - Budget viewing, expense approval, analytics',
+    Storekeeper: 'Storekeeper - Inventory management, supply logging, usage tracking'
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -64,7 +71,7 @@ export const Register: React.FC = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <CardDescription>
-            Join the Chef Management System
+            Join the Culinary Management System
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,11 +107,17 @@ export const Register: React.FC = () => {
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="HOD">HOD (Head of Department)</SelectItem>
                   <SelectItem value="Chef">Chef</SelectItem>
+                  <SelectItem value="Manager">Restaurant Manager</SelectItem>
+                  <SelectItem value="Storekeeper">Storekeeper</SelectItem>
                 </SelectContent>
               </Select>
+              {formData.role && (
+                <p className="text-xs text-gray-600 mt-1">
+                  {roleDescriptions[formData.role]}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
