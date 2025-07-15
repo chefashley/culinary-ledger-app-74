@@ -3,7 +3,8 @@ import {
   collection, 
   doc, 
   addDoc, 
-  updateDoc, 
+  updateDoc,
+  setDoc,
   deleteDoc, 
   onSnapshot, 
   query, 
@@ -140,10 +141,10 @@ export const useBudget = () => {
 
   const updateBudget = async (updates: Partial<Budget>) => {
     try {
-      await updateDoc(doc(db, 'budget', 'current'), {
+      await setDoc(doc(db, 'budget', 'current'), {
         ...updates,
         lastUpdated: Timestamp.now()
-      });
+      }, { merge: true });
       toast.success('Budget updated successfully');
     } catch (error) {
       console.error('Error updating budget:', error);
